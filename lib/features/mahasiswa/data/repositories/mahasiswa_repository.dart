@@ -1,32 +1,37 @@
+import 'package:dio/dio.dart';
+
 import '../models/mahasiswa_model.dart';
 
 class MahasiswaRepository {
 
+  final Dio _dio = Dio(
+    BaseOptions(
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0',
+      },
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
+
   Future<List<MahasiswaModel>> getMahasiswaList() async {
+    try {
+      final response = await _dio.get(
+        'https://jsonplaceholder.typicode.com/comments',
+      );
 
-    await Future.delayed(const Duration(seconds: 1));
+      print("STATUS MAHASISWA: ${response.statusCode}");
 
-    return [
-      MahasiswaModel(
-        nama: 'Budi Santoso',
-        nim: '220001',
-        email: 'budi@example.com',
-        jurusan: 'Teknik Informatika',
-      ),
+      final List<dynamic> data = response.data;
 
-      MahasiswaModel(
-        nama: 'Siti Rahma',
-        nim: '220002',
-        email: 'siti@example.com',
-        jurusan: 'Teknik Informatika',
-      ),
+      return data
+          .map((json) => MahasiswaModel.fromJson(json))
+          .toList();
 
-      MahasiswaModel(
-        nama: 'Andi Pratama',
-        nim: '220003',
-        email: 'andi@example.com',
-        jurusan: 'Teknik Informatika',
-      ),
-    ];
+    } catch (e) {
+      print("Error: $e");
+      throw Exception('Gagal memuat data mahasiswa aktif');;
+    }
   }
 }

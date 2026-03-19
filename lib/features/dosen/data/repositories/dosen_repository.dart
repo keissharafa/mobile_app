@@ -1,35 +1,37 @@
+import 'package:dio/dio.dart';
+
 import '../models/dosen_model.dart';
 
 class DosenRepository {
 
-  /// Mendapatkan daftar dosen
+  final Dio _dio = Dio(
+    BaseOptions(
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0',
+      },
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
+
   Future<List<DosenModel>> getDosenList() async {
+    try {
+      final response = await _dio.get(
+        'https://jsonplaceholder.typicode.com/users',
+      );
 
-    // Simulasi network delay
-    await Future.delayed(const Duration(seconds: 1));
+      print("STATUS DOSEN: ${response.statusCode}");
 
-    // Data dummy dosen
-    return [
-      DosenModel(
-        nama: 'Anank Prasetyo',
-        nip: '123456789',
-        email: 'anank.prasetyo@example.com',
-        jurusan: 'Teknik Informatika',
-      ),
+      final List<dynamic> data = response.data;
 
-      DosenModel(
-        nama: 'Rachman Sinatriya',
-        nip: '987654321',
-        email: 'rachman.sinatriya@example.com',
-        jurusan: 'Teknik Informatika',
-      ),
+      return data
+          .map((json) => DosenModel.fromJson(json))
+          .toList();
 
-      DosenModel(
-        nama: 'Alfian Sukma',
-        nip: '456789123',
-        email: 'alfian.sukma@example.com',
-        jurusan: 'Teknik Informatika',
-      ),
-    ];
+    } catch (e) {
+      print("Error: $e");
+      throw Exception('Gagal memuat data mahasiswa aktif');
+    }
   }
 }

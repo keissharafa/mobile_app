@@ -82,6 +82,8 @@ class ModernMahasiswaCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
+
+            /// Avatar
             Container(
               width: 60,
               height: 60,
@@ -91,7 +93,7 @@ class ModernMahasiswaCard extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  mahasiswa.nama.substring(0, 1).toUpperCase(),
+                  mahasiswa.name.substring(0, 1).toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -103,12 +105,13 @@ class ModernMahasiswaCard extends StatelessWidget {
 
             const SizedBox(width: 16),
 
+            /// Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    mahasiswa.nama,
+                    mahasiswa.name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -117,9 +120,15 @@ class ModernMahasiswaCard extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  Text("NIM: ${mahasiswa.nim}"),
                   Text(mahasiswa.email),
-                  Text(mahasiswa.jurusan),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    mahasiswa.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),

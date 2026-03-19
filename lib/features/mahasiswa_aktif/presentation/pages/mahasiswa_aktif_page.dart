@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/common_widgets.dart';
-import '../../../mahasiswa/data/models/mahasiswa_model.dart';
-import '../../../mahasiswa/presentation/widgets/mahasiswa_widget.dart';
+import '../providers/mahasiswa_aktif_provider.dart';
+import '../widgets/mahasiswa_aktif_widget.dart';
 
 class MahasiswaAktifPage extends ConsumerWidget {
   const MahasiswaAktifPage({super.key});
@@ -11,20 +11,7 @@ class MahasiswaAktifPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final mahasiswaAktif = [
-      MahasiswaModel(
-        nama: "Budi Santoso",
-        nim: "2101001",
-        email: "budi@example.com",
-        jurusan: "Teknik Informatika",
-      ),
-      MahasiswaModel(
-        nama: "Siti Rahma",
-        nim: "2101002",
-        email: "siti@example.com",
-        jurusan: "Teknik Informatika",
-      ),
-    ];
+    final mahasiswaAktifState = ref.watch(mahasiswaAktifNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -33,8 +20,28 @@ class MahasiswaAktifPage extends ConsumerWidget {
         foregroundColor: Colors.white,
       ),
 
-      body: MahasiswaListView(
-        mahasiswaList: mahasiswaAktif,
+      body: mahasiswaAktifState.when(
+
+        /// LOADING
+        loading: () => const LoadingWidget(),
+
+        /// ERROR
+        error: (error, stack) => CustomErrorWidget(
+          message: 'Gagal memuat data: ${error.toString()}',
+          onRetry: () {
+            ref.read(mahasiswaAktifNotifierProvider.notifier).refresh();
+          },
+        ),
+
+        /// DATA
+        data: (mahasiswaList) {
+          return MahasiswaAktifListView(
+            mahasiswaList: mahasiswaList,
+            onRefresh: () {
+              ref.invalidate(mahasiswaAktifNotifierProvider);
+            },
+          );
+        },
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../../../core/constants/app_constants.dart';
 import '../../data/models/dosen_model.dart';
 
 class ModernDosenCard extends StatefulWidget {
@@ -8,7 +8,7 @@ class ModernDosenCard extends StatefulWidget {
   final List<Color>? gradientColors;
 
   const ModernDosenCard({
-    super.key,
+    Key? key,
     required this.dosen,
     this.onTap,
     this.gradientColors,
@@ -100,17 +100,13 @@ class _ModernDosenCardState extends State<ModernDosenCard>
                 Container(
                   width: 60,
                   height: 60,
-
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradientColors,
-                    ),
+                    gradient: LinearGradient(colors: gradientColors),
                     borderRadius: BorderRadius.circular(16),
                   ),
-
                   child: Center(
                     child: Text(
-                      widget.dosen.nama.substring(0,1).toUpperCase(),
+                      widget.dosen.name.substring(0, 1).toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -129,10 +125,11 @@ class _ModernDosenCardState extends State<ModernDosenCard>
                     children: [
 
                       Text(
-                        widget.dosen.nama,
+                        widget.dosen.name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: -0.3,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -141,8 +138,8 @@ class _ModernDosenCardState extends State<ModernDosenCard>
                       const SizedBox(height: 8),
 
                       _buildInfoRow(
-                        Icons.badge_outlined,
-                        "NIP: ${widget.dosen.nip}",
+                        Icons.account_circle_outlined,
+                        '@${widget.dosen.username}',
                       ),
 
                       const SizedBox(height: 4),
@@ -155,14 +152,26 @@ class _ModernDosenCardState extends State<ModernDosenCard>
                       const SizedBox(height: 4),
 
                       _buildInfoRow(
-                        Icons.school_outlined,
-                        widget.dosen.jurusan,
+                        Icons.location_on_outlined,
+                        '${widget.dosen.address.street}, ${widget.dosen.address.city}',
                       ),
                     ],
                   ),
                 ),
 
-                const Icon(Icons.arrow_forward_ios_rounded,size:16)
+                /// Arrow Icon
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: gradientColors[0].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: gradientColors[0],
+                  ),
+                ),
 
               ],
             ),
@@ -175,11 +184,8 @@ class _ModernDosenCardState extends State<ModernDosenCard>
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-
         Icon(icon, size: 14, color: Colors.grey[600]),
-
         const SizedBox(width: 6),
-
         Expanded(
           child: Text(
             text,
@@ -198,6 +204,72 @@ class _ModernDosenCardState extends State<ModernDosenCard>
 
 
 
+/// ================================
+/// EMPTY STATE
+/// ================================
+
+class DosenEmptyState extends StatelessWidget {
+  final VoidCallback? onRefresh;
+
+  const DosenEmptyState({Key? key, this.onRefresh}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.people_outline_rounded,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          Text(
+            'Tidak ada data dosen',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Belum ada dosen yang terdaftar',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+
+          if (onRefresh != null) ...[
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Refresh'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+}
 
 
 
@@ -221,37 +293,47 @@ class DosenListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
+    if (dosenList.isEmpty) {
+      return DosenEmptyState(onRefresh: onRefresh);
+    }
+
     return RefreshIndicator(
-      onRefresh: () async {
-        onRefresh?.call();
-      },
+      onRefresh: () async => onRefresh?.call(),
 
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.paddingMedium),
         itemCount: dosenList.length,
 
         itemBuilder: (context, index) {
 
           final dosen = dosenList[index];
 
-          final gradients = [
-    [Colors.purple, Colors.deepPurple],
-    [Colors.pink, Colors.orange],
-    [Colors.blue, Colors.cyan],
-  ];
+          final gradientColors =
+              AppConstants.dashboardGradients[
+                index % AppConstants.dashboardGradients.length
+              ];
 
           if (useModernCard) {
             return ModernDosenCard(
               dosen: dosen,
-              gradientColors: gradients[index % gradients.length],
+              gradientColors: gradientColors,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Detail: ${dosen.name}'),
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
             );
           }
 
           return Card(
             child: ListTile(
-              title: Text(dosen.nama),
+              title: Text(dosen.name),
               subtitle: Text(dosen.email),
-              trailing: Text(dosen.nip),
+              trailing: Text(dosen.username),
             ),
           );
         },

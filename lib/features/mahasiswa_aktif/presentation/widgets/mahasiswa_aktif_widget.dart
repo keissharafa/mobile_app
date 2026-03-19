@@ -31,22 +31,35 @@ class MahasiswaAktifListView extends StatelessWidget {
 
             child: ListTile(
 
+              /// Avatar (pakai huruf pertama dari title)
               leading: CircleAvatar(
                 child: Text(
-                  mahasiswa.nama.substring(0,1).toUpperCase(),
+                  mahasiswa.title.substring(0,1).toUpperCase(),
                 ),
               ),
 
-              title: Text(mahasiswa.nama),
+              /// Title
+              title: Text(
+                mahasiswa.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
 
+              /// Subtitle
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  Text("NIM: ${mahasiswa.nim}"),
-                  Text(mahasiswa.email),
-                  Text(mahasiswa.jurusan),
-                  Text("Status: ${mahasiswa.status}"),
+                  Text("User ID: ${mahasiswa.userId}"),
+                  Text("Post ID: ${mahasiswa.id}"),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    mahasiswa.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
 
                 ],
               ),
