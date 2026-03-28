@@ -1,22 +1,57 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_application_1/core/services/local_storage_services.dart';
+import 'package:flutter_application_1/features/dosen/data/models/dosen_model.dart';
+import 'package:flutter_application_1/features/dosen/data/repositories/dosen_repository.dart';
 
-import '../../data/models/dosen_model.dart';
-import '../../data/repositories/dosen_repository.dart';
+// ================= REPOSITORY PROVIDER =================
 
-/// Repository Provider
 final dosenRepositoryProvider = Provider<DosenRepository>((ref) {
   return DosenRepository();
 });
 
-/// StateNotifier untuk mengelola state dosen
-class DosenNotifier extends StateNotifier<AsyncValue<List<DosenModel>>> {
-  final DosenRepository _repository;
+// ================= LOCAL STORAGE PROVIDER =================
 
-  DosenNotifier(this._repository) : super(const AsyncValue.loading()) {
+final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
+  return LocalStorageService();
+});
+
+// ================= SAVED USERS LIST =================
+
+final savedUsersProvider =
+    FutureProvider<List<Map<String, String>>>((ref) async {
+  final storage = ref.watch(localStorageServiceProvider);
+  return storage.getSavedUsers();
+});
+
+// ================= CURRENT USER =================
+
+final savedUserProvider =
+    FutureProvider<Map<String, String?>>((ref) async {
+  final storage = ref.watch(localStorageServiceProvider);
+
+  final userId = await storage.getUserId();
+  final username = await storage.getUsername();
+  final token = await storage.getToken();
+
+  return {
+    'user_id': userId,
+    'username': username,
+    'token': token,
+  };
+});
+
+// ================= DOSEN NOTIFIER =================
+
+class DosenNotifier
+    extends StateNotifier<AsyncValue<List<DosenModel>>> {
+  final DosenRepository _repository;
+  final LocalStorageService _storage;
+
+  DosenNotifier(this._repository, this._storage)
+      : super(const AsyncValue.loading()) {
     loadDosenList();
   }
 
-  /// Load data dosen dalam bentuk list
   Future<void> loadDosenList() async {
     state = const AsyncValue.loading();
 
@@ -28,16 +63,38 @@ class DosenNotifier extends StateNotifier<AsyncValue<List<DosenModel>>> {
     }
   }
 
-  /// Refresh data dosen
   Future<void> refresh() async {
     await loadDosenList();
   }
+
+  // ================= LOCAL STORAGE ACTION =================
+
+  /// Simpan dosen ke local storage
+  Future<void> saveSelectedDosen(DosenModel dosen) async {
+  await _storage.addUserToSavedList(
+    userId: dosen.id.toString(),
+    username: dosen.name, 
+  );
 }
 
-/// Dosen Notifier Provider
-final dosenNotifierProvider =
-    StateNotifierProvider.autoDispose<DosenNotifier, AsyncValue<List<DosenModel>>>(
-        (ref) {
+  /// Hapus user tertentu
+  Future<void> removeSavedUser(String userId) async {
+    await _storage.removeSavedUser(userId);
+  }
+
+  /// Hapus semua user
+  Future<void> clearSavedUsers() async {
+    await _storage.clearSavedUsers();
+  }
+}
+
+// ================= PROVIDER =================
+
+final dosenNotifierProvider = StateNotifierProvider.autoDispose<
+    DosenNotifier,
+    AsyncValue<List<DosenModel>>>((ref) {
   final repository = ref.watch(dosenRepositoryProvider);
-  return DosenNotifier(repository);
+  final storage = ref.watch(localStorageServiceProvider);
+
+  return DosenNotifier(repository, storage);
 });

@@ -1,37 +1,25 @@
 import 'package:dio/dio.dart';
-
-import '../models/mahasiswa_model.dart';
+import 'package:flutter_application_1/core/network/dio_client.dart';
+import 'package:flutter_application_1/features/mahasiswa/data/models/mahasiswa_model.dart';
 
 class MahasiswaRepository {
+  final DioClient _dioClient;
 
-  final Dio _dio = Dio(
-    BaseOptions(
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0',
-      },
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-    ),
-  );
+  MahasiswaRepository({DioClient? dioClient})
+      : _dioClient = dioClient ?? DioClient();
 
+  /// GET daftar mahasiswa
   Future<List<MahasiswaModel>> getMahasiswaList() async {
     try {
-      final response = await _dio.get(
-        'https://jsonplaceholder.typicode.com/comments',
-      );
-
-      print("STATUS MAHASISWA: ${response.statusCode}");
+      final Response response = await _dioClient.dio.get('/users');
 
       final List<dynamic> data = response.data;
 
-      return data
-          .map((json) => MahasiswaModel.fromJson(json))
-          .toList();
-
-    } catch (e) {
-      print("Error: $e");
-      throw Exception('Gagal memuat data mahasiswa aktif');;
+      return data.map((json) => MahasiswaModel.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception(
+        "Gagal memuat data mahasiswa: ${e.response?.statusCode} - ${e.message}",
+      );
     }
   }
 }

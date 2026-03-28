@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
-import '../../data/models/mahasiswa_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:flutter_application_1/features/mahasiswa/data/models/mahasiswa_model.dart';
+import 'package:flutter_application_1/features/mahasiswa/presentation/providers/mahasiswa_provider.dart';
 
 class MahasiswaListView extends StatelessWidget {
   final List<MahasiswaModel> mahasiswaList;
   final VoidCallback? onRefresh;
-  final bool useModernCard;
 
   const MahasiswaListView({
     super.key,
     required this.mahasiswaList,
     this.onRefresh,
-    this.useModernCard = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () async {
-        onRefresh?.call();
-      },
+      onRefresh: () async => onRefresh?.call(),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: mahasiswaList.length,
@@ -42,7 +41,9 @@ class MahasiswaListView extends StatelessWidget {
   }
 }
 
-class ModernMahasiswaCard extends StatelessWidget {
+// ================= CARD =================
+
+class ModernMahasiswaCard extends ConsumerWidget {
   final MahasiswaModel mahasiswa;
   final List<Color>? gradientColors;
 
@@ -53,7 +54,7 @@ class ModernMahasiswaCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = gradientColors ??
         [
           Theme.of(context).primaryColor,
@@ -82,7 +83,6 @@ class ModernMahasiswaCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-
             /// Avatar
             Container(
               width: 60,
@@ -125,19 +125,33 @@ class ModernMahasiswaCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    mahasiswa.body,
-                    maxLines: 2,
+                    mahasiswa.address.city,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
 
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: colors[0],
-            )
+            /// SAVE BUTTON 🔥
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: () async {
+                await ref
+                    .read(mahasiswaNotifierProvider.notifier)
+                    .saveSelectedMahasiswa(mahasiswa);
+
+                ref.invalidate(savedMahasiswaProvider);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${mahasiswa.name} disimpan'),
+                    ),
+                  );
+                }
+              },
+            ),
           ],
         ),
       ),

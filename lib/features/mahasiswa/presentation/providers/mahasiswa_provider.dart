@@ -1,35 +1,52 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/mahasiswa_model.dart';
-import '../../data/repositories/mahasiswa_repository.dart';
+import 'package:flutter_application_1/core/services/local_storage_services.dart';
+import 'package:flutter_application_1/features/mahasiswa/data/models/mahasiswa_model.dart';
+import 'package:flutter_application_1/features/mahasiswa/data/repositories/mahasiswa_repository.dart';
 
-/// Repository Provider
-final mahasiswaRepositoryProvider =
-    Provider<MahasiswaRepository>((ref) {
+
+// ================= REPOSITORY PROVIDER =================
+
+final mahasiswaRepositoryProvider = Provider<MahasiswaRepository>((ref) {
   return MahasiswaRepository();
 });
 
-/// StateNotifier
+
+// ================= LOCAL STORAGE PROVIDER =================
+
+final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
+  return LocalStorageService();
+});
+
+
+// ================= SAVED USERS =================
+
+final savedMahasiswaProvider =
+    FutureProvider<List<Map<String, String>>>((ref) async {
+  final storage = ref.watch(localStorageServiceProvider);
+  return storage.getSavedUsers();
+});
+
+
+// ================= NOTIFIER =================
+
 class MahasiswaNotifier
     extends StateNotifier<AsyncValue<List<MahasiswaModel>>> {
-
   final MahasiswaRepository _repository;
+  final LocalStorageService _storage;
 
-  MahasiswaNotifier(this._repository)
+  MahasiswaNotifier(this._repository, this._storage)
       : super(const AsyncValue.loading()) {
     loadMahasiswaList();
   }
 
   Future<void> loadMahasiswaList() async {
+    state = const AsyncValue.loading();
+
     try {
-      state = const AsyncValue.loading();
-
       final data = await _repository.getMahasiswaList();
-
       state = AsyncValue.data(data);
-
     } catch (error, stackTrace) {
-
       state = AsyncValue.error(error, stackTrace);
     }
   }
@@ -37,15 +54,33 @@ class MahasiswaNotifier
   Future<void> refresh() async {
     await loadMahasiswaList();
   }
+
+  // ================= LOCAL STORAGE =================
+
+  Future<void> saveSelectedMahasiswa(MahasiswaModel mahasiswa) async {
+    await _storage.addUserToSavedList(
+      userId: mahasiswa.id.toString(),
+      username: mahasiswa.name,
+    );
+  }
+
+  Future<void> removeSavedMahasiswa(String userId) async {
+    await _storage.removeSavedUser(userId);
+  }
+
+  Future<void> clearSavedMahasiswa() async {
+    await _storage.clearSavedUsers();
+  }
 }
 
-/// Provider
-final mahasiswaNotifierProvider =
-    StateNotifierProvider.autoDispose<
-        MahasiswaNotifier,
-        AsyncValue<List<MahasiswaModel>>>((ref) {
 
+// ================= PROVIDER =================
+
+final mahasiswaNotifierProvider = StateNotifierProvider.autoDispose<
+    MahasiswaNotifier,
+    AsyncValue<List<MahasiswaModel>>>((ref) {
   final repository = ref.watch(mahasiswaRepositoryProvider);
+  final storage = ref.watch(localStorageServiceProvider);
 
-  return MahasiswaNotifier(repository);
+  return MahasiswaNotifier(repository, storage);
 });

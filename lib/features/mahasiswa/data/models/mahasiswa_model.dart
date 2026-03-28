@@ -1,35 +1,47 @@
 class MahasiswaModel {
-  final int postId;
   final int id;
   final String name;
+  final String username;
   final String email;
-  final String body;
+  final Address address;
 
   MahasiswaModel({
-    required this.postId,
     required this.id,
     required this.name,
+    required this.username,
     required this.email,
-    required this.body,
+    required this.address,
   });
 
   factory MahasiswaModel.fromJson(Map<String, dynamic> json) {
     return MahasiswaModel(
-      postId: json['postId'] ?? 0,
-      id: json['id'] ?? 0,
+      id: json['id'],
       name: json['name'] ?? '',
+      username: json['username'] ?? '',
       email: json['email'] ?? '',
-      body: json['body'] ?? '',
+      address: Address.fromJson(json['address'] ?? {}),
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'postId': postId,
-      'id': id,
-      'name': name,
-      'email': email,
-      'body': body,
-    };
+// ================= ADDRESS =================
+
+class Address {
+  final String street;
+  final String suite;
+  final String city;
+
+  Address({
+    required this.street,
+    required this.suite,
+    required this.city,
+  });
+
+  factory Address.fromJson(Map<String, dynamic> json) {
+    return Address(
+      street: json['street'] ?? '',
+      suite: json['suite'] ?? '',
+      city: json['city'] ?? '',
+    );
   }
 }
